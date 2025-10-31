@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircle, Heart, Plus, TrendingUp, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToastContext } from '@/components/providers/ToastProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,6 +9,7 @@ import { CreatePollModal } from '@/components/ui/CreatePollModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { HomeFeedSkeleton } from '@/components/ui/Skeleton';
 import { useLikePoll, usePolls, useRemoveVote, useUnlikePoll, useVoteOnPoll } from '@/hooks/usePolls';
+import { useSocket } from '@/components/providers/SocketProvider';
 import { Poll } from '@/types';
 
 export function HomeFeed() {
@@ -16,6 +17,7 @@ export function HomeFeed() {
   const [page, setPage] = useState(1);
   
   const { success, error: showError } = useToastContext();
+  const { joinPoll, isConnected } = useSocket();
   
   const { data: pollsData, isLoading, error, refetch } = usePolls({
     sortBy: 'newest',
@@ -25,6 +27,16 @@ export function HomeFeed() {
 
   const polls = (pollsData as any)?.data || [];
   const pagination = (pollsData as any)?.pagination;
+
+  useEffect(() => {
+    if (isConnected && polls.length > 0) {
+      const pollIds = polls.map((poll: Poll) => poll.pollId);
+      const uniquePollIds = Array.from(new Set(pollIds));
+      uniquePollIds.forEach((pollId: string) => {
+        joinPoll(pollId);
+      });
+    }
+  }, [polls.length, isConnected, joinPoll]);
 
   const voteMutation = useVoteOnPoll();
   const removeVoteMutation = useRemoveVote();

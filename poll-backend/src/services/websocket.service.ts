@@ -21,8 +21,6 @@ export class WebSocketService {
           socket.join(`poll:${pollId}`);
           socket.data.pollId = pollId;
           
-          console.log(`User ${socket.id} joined poll ${pollId}`);
-          
           socket.emit('joined_poll', { pollId });
         } catch (error) {
           console.error('Error joining poll:', error);

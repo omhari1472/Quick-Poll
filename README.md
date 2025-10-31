@@ -50,7 +50,7 @@ Update `.env` with your database credentials:
 
 ```env
 DATABASE_URL=mysql://username:password@host:port/database
-PORT=8080
+PORT=8787
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 ```
@@ -72,8 +72,8 @@ npm install
 Create `.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8080/api
-NEXT_PUBLIC_SOCKET_URL=http://localhost:8080
+NEXT_PUBLIC_API_URL=http://localhost:8787/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:8787
 ```
 
 Start the dev server:

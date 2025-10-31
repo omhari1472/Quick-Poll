@@ -5,6 +5,8 @@ import config from '@/config';
 class SocketService {
   private socket: Socket<SocketEvents, SocketEvents> | null = null;
   private isConnected = false;
+  private pendingPolls: Set<string> = new Set();
+  private joinedPolls: Set<string> = new Set();
 
   connect(): Socket<SocketEvents, SocketEvents> {
     if (this.socket?.connected) {
@@ -19,12 +21,11 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected');
       this.isConnected = true;
+      this.rejoinAllPolls();
     });
 
     this.socket.on('disconnect', () => {
-      console.log('Socket disconnected');
       this.isConnected = false;
     });
 
@@ -35,11 +36,23 @@ class SocketService {
     return this.socket;
   }
 
+  private rejoinAllPolls() {
+    const pollsToJoin = Array.from(this.pendingPolls);
+    
+    pollsToJoin.forEach(pollId => {
+      if (this.socket?.connected) {
+        this.socket.emit('join_poll', pollId);
+      }
+    });
+  }
+
   disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.joinedPolls.clear();
+      this.pendingPolls.clear();
     }
   }
 
@@ -52,13 +65,27 @@ class SocketService {
   }
 
   joinPoll(pollId: string): void {
-    if (this.socket) {
+    if (this.joinedPolls.has(pollId)) {
+      return;
+    }
+
+    this.pendingPolls.add(pollId);
+    
+    if (!this.socket) {
+      this.connect();
+    }
+
+    if (this.socket && this.socket.connected) {
       this.socket.emit('join_poll', pollId);
     }
   }
 
-  leavePoll(pollId: string): void {
-    if (this.socket) {
+  leavePoll(pollId: string, removeFromPending = true): void {
+    if (removeFromPending) {
+      this.pendingPolls.delete(pollId);
+    }
+    this.joinedPolls.delete(pollId);
+    if (this.socket && this.socket.connected) {
       this.socket.emit('leave_poll', pollId);
     }
   }
@@ -107,7 +134,10 @@ class SocketService {
 
   onJoinedPoll(callback: (data: { pollId: string }) => void): void {
     if (this.socket) {
-      this.socket.on('joined_poll', callback);
+      this.socket.on('joined_poll', (data) => {
+        this.joinedPolls.add(data.pollId);
+        callback(data);
+      });
     }
   }
 
@@ -117,9 +147,13 @@ class SocketService {
     }
   }
 
-  off(event: keyof SocketEvents): void {
+  off(event: keyof SocketEvents, callback?: (...args: any[]) => void): void {
     if (this.socket) {
-      this.socket.off(event);
+      if (callback) {
+        this.socket.off(event, callback);
+      } else {
+        this.socket.off(event);
+      }
     }
   }
 }

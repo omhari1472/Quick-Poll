@@ -93,6 +93,7 @@ export class PollService {
   async voteOnPoll(pollId: string, sessionId: string, optionId: string): Promise<{
     vote: any;
     updatedCounts: Record<string, number>;
+    action: 'added' | 'changed' | 'unchanged';
   }> {
     const poll = await pollRepository.findById(pollId);
     if (!poll) {
@@ -113,13 +114,13 @@ export class PollService {
     if (existingVote) {
       if (existingVote.optionId === optionId) {
         const updatedCounts = await voteRepository.getVoteCounts(pollId);
-        return { vote: existingVote, updatedCounts };
+        return { vote: existingVote, updatedCounts, action: 'unchanged' };
       }
       
       await voteRepository.update(existingVote.voteId, optionId);
       const updatedVote = await voteRepository.findById(existingVote.voteId);
       const updatedCounts = await voteRepository.getVoteCounts(pollId);
-      return { vote: updatedVote, updatedCounts };
+      return { vote: updatedVote, updatedCounts, action: 'changed' };
     }
 
     const voteId = uuidv4();
@@ -132,7 +133,7 @@ export class PollService {
 
     const updatedCounts = await voteRepository.getVoteCounts(pollId);
 
-    return { vote, updatedCounts };
+    return { vote, updatedCounts, action: 'added' };
   }
 
   async removeVote(pollId: string, sessionId: string): Promise<{

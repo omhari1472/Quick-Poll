@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { webSocketService } from '@/index';
 import { SessionRequest } from '@/middleware/session.middleware';
 import { pollService } from '@/services/poll.service';
 import { createPollSchema, pollFiltersSchema, updatePollSchema, ValidationError } from '@/types';
@@ -16,6 +17,8 @@ export class PollController {
       } as const;
       
       const poll = await pollService.createPoll(sessionId, payload);
+      
+      await webSocketService.broadcastPollUpdate(poll.pollId, poll);
       
       res.status(201).json({
         success: true,
@@ -138,6 +141,8 @@ export class PollController {
       
       const poll = await pollService.updatePoll(pollId, sessionId, updatePayload);
       
+      await webSocketService.broadcastPollUpdate(pollId, poll);
+      
       res.json({
         success: true,
         data: poll,
@@ -168,6 +173,8 @@ export class PollController {
       const sessionId = req.sessionId;
       
       await pollService.deletePoll(pollId, sessionId);
+      
+      await webSocketService.broadcastPollDeleted(pollId);
       
       res.json({
         success: true,
@@ -200,9 +207,18 @@ export class PollController {
       
       const result = await pollService.voteOnPoll(pollId, sessionId, optionId);
       
+      if (result.action === 'added') {
+        await webSocketService.broadcastVoteAdded(pollId, result.vote, result.updatedCounts);
+      } else if (result.action === 'changed') {
+        await webSocketService.broadcastVoteChanged(pollId, result.vote, result.updatedCounts);
+      }
+      
       res.json({
         success: true,
-        data: result,
+        data: {
+          vote: result.vote,
+          updatedCounts: result.updatedCounts,
+        },
       });
       return;
     } catch (error) {
@@ -230,6 +246,8 @@ export class PollController {
       const sessionId = req.sessionId;
       
       const result = await pollService.removeVote(pollId, sessionId);
+      
+      await webSocketService.broadcastVoteRemoved(pollId, sessionId, result.updatedCounts);
       
       res.json({
         success: true,
@@ -262,6 +280,8 @@ export class PollController {
       
       const result = await pollService.likePoll(pollId, sessionId);
       
+      await webSocketService.broadcastLikeAdded(pollId, result.like, result.totalLikes);
+      
       res.json({
         success: true,
         data: result,
@@ -292,6 +312,8 @@ export class PollController {
       const sessionId = req.sessionId;
       
       const result = await pollService.unlikePoll(pollId, sessionId);
+      
+      await webSocketService.broadcastLikeRemoved(pollId, sessionId, result.totalLikes);
       
       res.json({
         success: true,

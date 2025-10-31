@@ -20,11 +20,11 @@ const config = {
   API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 
     (isProduction() 
       ? 'https://poll-backend-py4a.onrender.com/api' 
-      : 'http://localhost:8080/api'),
+      : 'http://localhost:8787/api'),
   SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 
     (isProduction() 
       ? 'https://poll-backend-py4a.onrender.com' 
-      : 'http://localhost:8080'),
+      : 'http://localhost:8787'),
 };
 
 export default config;

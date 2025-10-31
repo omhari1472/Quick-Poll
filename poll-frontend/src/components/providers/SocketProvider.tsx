@@ -11,10 +11,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Connect to socket
     const socket = socketService.connect();
 
-    // Set up connection status
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
 
@@ -24,7 +22,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
-      socketService.disconnect();
     };
   }, []);
 
