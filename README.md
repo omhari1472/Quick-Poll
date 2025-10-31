@@ -84,29 +84,32 @@ npm run dev
 
 ## Deployment
 
-**Frontend** → Vercel  
-**Backend** → Render  
-**Database** → Render MySQL or PlanetScale
+### Live URLs
+
+- **Frontend**: [https://quick-poll-dev.vercel.app/](https://quick-poll-dev.vercel.app/)
+- **Backend**: [https://poll-backend-py4a.onrender.com/](https://poll-backend-py4a.onrender.com/)
+
+**Hosting**: Frontend on Vercel, Backend on Render, Database on Render MySQL
 
 ### Environment Variables
 
-**Backend:**
+**Backend (Render):**
 ```env
 NODE_ENV=production
 PORT=10000
 DATABASE_URL=mysql://...
-FRONTEND_URL=https://your-app.vercel.app
+FRONTEND_URL=https://quick-poll-dev.vercel.app
 ```
 
-**Frontend:**
+**Frontend (Vercel):**
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend.onrender.com/api
-NEXT_PUBLIC_SOCKET_URL=https://your-backend.onrender.com
+NEXT_PUBLIC_API_URL=https://poll-backend-py4a.onrender.com/api
+NEXT_PUBLIC_SOCKET_URL=https://poll-backend-py4a.onrender.com
 ```
 
 Verify deployment with:
 ```bash
-./verify-deployment.sh <backend-url> <frontend-url>
+./verify-deployment.sh https://poll-backend-py4a.onrender.com https://quick-poll-dev.vercel.app
 ```
 
 ## API Endpoints
